@@ -120,6 +120,32 @@ module Refile
       end
     end
 
+    # Blur the image
+    #
+    # The Sigma value is the important argument, and determines the actual 
+    # amount of blurring that will take place. The Radius is only used to 
+    # determine the size of the array which will hold the calculated Gaussian 
+    # distribution. It should be an integer. If not given, or set to zero, 
+    # IM will calculate the largest possible radius that will provide 
+    # meaningful results for the Gaussian distribution. The larger the Radius 
+    # the slower the operation is. However too small a Radius, and sever 
+    # aliasing effects may result. As a guideline, Radius should be at least 
+    # twice the Sigma value, though three times will produce a more accurate result.
+    #
+    # @param [MiniMagick::Image] img      the image to convert
+    # @param [#to_s] radius               the size of array
+    # @param [#to_s] sigma                the amount being blurred
+    # @yield [MiniMagick::Tool::Mogrify, MiniMagick::Tool::Convert]
+    # @return [void]
+    # @see http://www.imagemagick.org/script/command-line-options.php#blur
+    def blur(img, radius, sigma)
+      ::MiniMagick::Tool::Convert.new do |cmd|
+        yield cmd if block_given?
+        cmd.blur "#{radius}x#{sigma}^"
+        cmd.merge! [img.path, img.path]
+      end
+    end
+    
     # Process the given file. The file will be processed via one of the
     # instance methods of this class, depending on the `method` argument passed
     # to the constructor on initialization.
@@ -139,6 +165,6 @@ module Refile
   end
 end
 
-[:fill, :fit, :limit, :pad, :convert].each do |name|
+[:fill, :fit, :limit, :pad, :convert, :blur].each do |name|
   Refile.processor(name, Refile::MiniMagick.new(name))
 end
